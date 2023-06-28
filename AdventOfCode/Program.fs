@@ -15,18 +15,11 @@ let main argv =
         
     printf "Enter the problem you would like solved:
     1: Elf calorie counting  
-    2: Rock Paper Scissors \n" 
+    2: Rock Paper Scissors
+    3: Backpacks \n" 
 
-    (*let p = Console.ReadLine().Trim()
+    let p = Console.ReadLine().Trim()
     let programme = p |> int
-    let s =     
-        match programme with 
-            | 1 -> "Enter file name: "
-            | _ -> "Invalid Number."
-    
-    printf $"{s}" 
-    let v = 
-        if not (s = "") then Console.ReadLine().Trim()
-        else "d"*)
-    runP 3 "backpacks.txt"
+   
+    runP programme "d"
     0

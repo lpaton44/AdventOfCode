@@ -14,12 +14,12 @@ module Days =
             let index = List.tryFindIndex String.IsNullOrWhiteSpace rest
             match index with
                | Some i ->
-                  let temp, newRest =
-                     if i = 0 then
-                        List.tail rest, List.tail rest
-                     else
-                        List.takeWhile (fun i -> not (i = "")) rest, List.removeManyAt 0 (i+1) rest
-                  inner (temp::lists) newRest
+                  if i = 0 then
+                     inner lists (List.tail rest)
+                  else
+                     let temp = List.takeWhile (fun i -> not (i = "")) rest
+                     let newRest = List.removeManyAt 0 (i + 1) rest
+                     inner (temp::lists) newRest
                | None ->
                   let final = rest
                   inner (final::lists) []
@@ -91,27 +91,38 @@ module Days =
       else
          halveArray (a @ [List.head b]) (List.tail b) (i - 1)
    
+   let splitByThrees (data: string List) =                                       
+      let rec inner (lists: string list list) (rest: string List) =                
+         if rest = [] then lists                                                   
+         else
+            let newList = rest.[0..2]
+            inner (newList::lists) rest.[3..]                                 
+      inner List.empty data
    
-   let rec checkInBoth (a: char list) (b: char list)  =
+   
+   let rec checkInAll (a: char list)(b: char list list) =
       if a = List.empty then None
       else
-         if (b |> List.contains (List.head a)) then Some (List.head a)
-         else checkInBoth (List.tail a) b 
+         let char = List.head a
+         let check = b |> List.filter (fun i -> List.contains char i)
+         
+         if check.Length = 2 then Some char
+         else checkInAll (List.tail a) b 
    
    
-   let sumPriorities (backpacks: string list) =
+   let day3p1 (backpacks: string list) =
+      
       let rec inner score (remaining: string list) =
          if remaining = [] then
             printfn $"{score}"
             score
          else
             let backpack = List.head remaining
-            printfn $"{backpack}"
             let chars = backpack.ToCharArray() |> Array.toList
             let charsA, charsB = halveArray List.empty chars (chars.Length/2)
         
             let char =
-               match checkInBoth charsA charsB with
+               match checkInAll charsA [charsB] with
                | None -> 0
                | Some c ->
                   let asc = c |> int
@@ -122,28 +133,48 @@ module Days =
             inner (score + char) (List.tail remaining)
       inner 0 backpacks
       
-
+   let day3p2 backpacks =
+      
+      let groups = splitByThrees backpacks
+      
+      let rec inner groups sum =
+         if groups = [] then
+            sum
+         else
+            let (group: string list) = List.head groups
+            let groupChars = group |> List.map (fun i -> i.ToCharArray() |> Array.toList)
+            let char =                                 
+               match checkInAll (List.head groupChars) (List.tail groupChars) with   
+               | None -> 0                             
+               | Some c ->
+                  let asc = c |> int                   
+                  let final =                          
+                     if asc > 96 then (asc - 96)       
+                     else (asc - 38)
+                  final                                
+            inner (List.tail groups) (sum + char)
+      inner groups 0       
+      
       
    let day1 v =
-      let filePath = v
+      let filePath = "elf.txt"
       let rows = File.ReadLines filePath |> Seq.toList
-       
       let finalRows = rows |> splitByBlankLine |> List.rev
-      
+      for row in finalRows do
+         printfn $"{row}"
       let answer = findElf finalRows
       printfn $"{answer}"
    
-   
    let day2 v =
-      let filePath = v
+      let filePath = "RPS.txt"
       let rows = File.ReadLines filePath |> Seq.toList
       //let answer = calcScore rows
       let answer = chooseMoves rows 
       printfn $"{answer}"
       
    let day3 v =
-      let filePath = v
+      let filePath = "backpacks.txt"
       let backpacks = File.ReadLines filePath |> Seq.toList
-      sumPriorities backpacks
-      printfn ""
- 
+      //day3p1 backpacks
+      let m = day3p2 backpacks
+      printfn $"{m}"
