@@ -7,8 +7,7 @@
 
     <ItemGroup>
         <Compile Include="Days.fs" />
-        <Compile Include="Program.fs" />
-        <Content Include=".gitignore" /> 
+        <Compile Include="Program.fs" /> 
     </ItemGroup>
 
 </Project>
