@@ -39,14 +39,15 @@ module Days =
    let playScore = dict ["X", 1; "Y", 2; "Z",3]
    let resultScore = dict ["W", 6; "D", 3; "L",0]
    let conversions = dict ["A", "X"; "B", "Y"; "C","Z"]
-   let WinningResults = [("A", "Y"); ("B", "Z"); ("C", "X")] 
-     
+   let winningResults = dict ["A", "Y"; "B", "Z"; "C", "X"] 
+   let losingResults = dict ["A", "Z"; "B", "X"; "C", "Y"] 
+
        
    let checkResult a b =
       match a, b with
       | x, y when (conversions[x] = y) -> resultScore["D"]
       | _, _ ->
-         if WinningResults |> List.contains (a,b) then resultScore["W"]
+         if winningResults[a] = b then resultScore["W"]
          else resultScore["L"]
    
    let calcScore rows =
@@ -64,7 +65,25 @@ module Days =
       
       inner rows 0       
    
+   let getMove a b =
+      let result =
+         match a,b with
+         | _, "Y" -> playScore[conversions[a]] + resultScore["D"]
+         | _, "X" -> playScore[losingResults[a]] + resultScore["L"]
+         | _, "Z" -> playScore[winningResults[a]] + resultScore["W"]
+      result     
    
+   let chooseMoves rows =
+      let rec inner (rows: string list) score =
+         if rows = [] then score
+         else
+            let row = List.head rows
+            let plays = row.Split " " |> Array.toList |> List.map (fun i -> i.Trim())
+            let roundScore = getMove plays[0] plays[1]      
+            inner (List.tail rows) (score + roundScore)
+      
+      inner rows 0 
+      
       
    let day1 v =
       let filePath = v
@@ -79,5 +98,6 @@ module Days =
    let day2 v =
       let filePath = v
       let rows = File.ReadLines filePath |> Seq.toList
-      let answer = calcScore rows
+      //let answer = calcScore rows
+      let answer = chooseMoves rows 
       printfn $"{answer}"

@@ -27,5 +27,5 @@ let main argv =
     let v = 
         if not (s = "") then Console.ReadLine().Trim()
         else "d"*)
-    runP 2 "RPS.txt"
+    runP 2 "RPS_2.txt"
     0
