@@ -82,8 +82,47 @@ module Days =
             let roundScore = getMove plays[0] plays[1]      
             inner (List.tail rows) (score + roundScore)
       
-      inner rows 0 
+      inner rows 0
+   
+   
+   //day 3 stuff
+   let rec halveArray (a: 'a list) (b: 'a list) i =
+      if i = 0 then a, b
+      else
+         halveArray (a @ [List.head b]) (List.tail b) (i - 1)
+   
+   
+   let rec checkInBoth (a: char list) (b: char list)  =
+      if a = List.empty then None
+      else
+         if (b |> List.contains (List.head a)) then Some (List.head a)
+         else checkInBoth (List.tail a) b 
+   
+   
+   let sumPriorities (backpacks: string list) =
+      let rec inner score (remaining: string list) =
+         if remaining = [] then
+            printfn $"{score}"
+            score
+         else
+            let backpack = List.head remaining
+            printfn $"{backpack}"
+            let chars = backpack.ToCharArray() |> Array.toList
+            let charsA, charsB = halveArray List.empty chars (chars.Length/2)
+        
+            let char =
+               match checkInBoth charsA charsB with
+               | None -> 0
+               | Some c ->
+                  let asc = c |> int
+                  let final =
+                     if asc > 96 then (asc - 96)
+                     else (asc - 38)
+                  final
+            inner (score + char) (List.tail remaining)
+      inner 0 backpacks
       
+
       
    let day1 v =
       let filePath = v
@@ -101,3 +140,10 @@ module Days =
       //let answer = calcScore rows
       let answer = chooseMoves rows 
       printfn $"{answer}"
+      
+   let day3 v =
+      let filePath = v
+      let backpacks = File.ReadLines filePath |> Seq.toList
+      sumPriorities backpacks
+      printfn ""
+ 

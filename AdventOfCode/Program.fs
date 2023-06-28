@@ -5,7 +5,8 @@ let runP p v =
     let programme = p |> int
     match programme with 
     | 1 -> Days.day1 v
-    | 2 -> Days.day2 v 
+    | 2 -> Days.day2 v
+    | 3 -> Days.day3 v 
     | _ -> printfn "Invalid number." 
 
 
@@ -27,5 +28,5 @@ let main argv =
     let v = 
         if not (s = "") then Console.ReadLine().Trim()
         else "d"*)
-    runP 2 "RPS_2.txt"
+    runP 3 "backpacks.txt"
     0
