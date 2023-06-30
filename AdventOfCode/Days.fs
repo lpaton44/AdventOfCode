@@ -7,24 +7,31 @@ module Days =
    open System.IO
    
    //day 1 methods
+   
+   let findNextBlank lines =
+      let index = List.tryFindIndex String.IsNullOrWhiteSpace lines
+      match index with
+               | Some i ->
+                  if i = 0 then
+                     None, List.tail lines
+                  else
+                     let line = List.takeWhile (fun i -> not (i = "")) lines
+                     let remaining = List.removeManyAt 0 (i + 1) lines
+                     Some line, remaining
+               | None ->
+                  let remaining = lines 
+                  Some remaining, [] 
+      
    let splitByBlankLine (data: string List) =
       let rec inner (lists: string list list) (rest: string List) =
          if rest = [] then lists
          else
-            let index = List.tryFindIndex String.IsNullOrWhiteSpace rest
-            match index with
-               | Some i ->
-                  if i = 0 then
-                     inner lists (List.tail rest)
-                  else
-                     let temp = List.takeWhile (fun i -> not (i = "")) rest
-                     let newRest = List.removeManyAt 0 (i + 1) rest
-                     inner (temp::lists) newRest
-               | None ->
-                  let final = rest
-                  inner (final::lists) []
+            let addLine, remaining = findNextBlank rest 
+            match addLine, remaining with
+               | None, _ -> inner lists remaining
+               | Some line, [] -> line::lists
+               | Some line, _ -> inner (line::lists) remaining
       inner List.empty data
-   
  
    let findElf (elves: string list list) =
       elves
@@ -36,41 +43,41 @@ module Days =
       |> List.sum
    
    //day 2 methods
-   let playScore = dict ["X", 1; "Y", 2; "Z",3]
-   let resultScore = dict ["W", 6; "D", 3; "L",0]
-   let conversions = dict ["A", "X"; "B", "Y"; "C","Z"]
-   let winningResults = dict ["A", "Y"; "B", "Z"; "C", "X"] 
-   let losingResults = dict ["A", "Z"; "B", "X"; "C", "Y"] 
-
-       
-   let checkResult a b =
-      match a, b with
-      | x, y when (conversions[x] = y) -> resultScore["D"]
+   let playScore = ["Rock", 1; "Paper", 2; "Scissors", 3] |> Map.ofList
+   let resultScore = ["Win", 6; "Draw", 3; "Lose", 0] |> Map.ofList
+   let playConversions = ["A", "Rock"; "X", "Rock"; "B", "Paper"; "Y", "Paper"; "Z", "Scissors"; "C", "Scissors"]|> Map.ofList
+   let outcomeConversions= ["X", "Lose"; "Y", "Draw"; "Z", "Win" ]|> Map.ofList
+   let winningResults = ["Rock", "Paper"; "Paper", "Scissors"; "Scissors", "Rock"] |> Map.ofList
+   let losingResults = ["Rock", "Scissors"; "Paper", "Rock"; "Scissors", "Paper"] |> Map.ofList
+     
+   let checkResult playerOne playerTwo =
+      match playerOne, playerTwo with
+      | x, y when (x = y) -> resultScore.["Draw"]
       | _, _ ->
-         if winningResults[a] = b then resultScore["W"]
-         else resultScore["L"]
+         if winningResults[playerOne] = playerTwo then resultScore.["Win"]
+         else resultScore.["Lose"]
    
-   let calcScore rows =
-      
+   let calcScore rows =  
       let rec inner (rows: string list) score =
          if rows = [] then score
          else
             let row = List.head rows
             let plays = row.Split " " |> Array.toList |> List.map (fun i -> i.Trim())
             let roundScore =
-                  let a = playScore[plays[1]]
-                  let b = checkResult plays[0] plays[1]
-                  a + b
-            inner (List.tail rows) (score + roundScore)
-      
+                  let playerOne = playConversions[plays[0]]
+                  let playerTwo = playConversions[plays[1]]
+                  let playScore = playScore[playerTwo]
+                  let resultScore = checkResult playerOne playerTwo 
+                  playScore + resultScore
+            inner (List.tail rows) (score + roundScore)     
       inner rows 0       
    
-   let getMove a b =
+   let getMove playerOne outcome =
       let result =
-         match a,b with
-         | _, "Y" -> playScore[conversions[a]] + resultScore["D"]
-         | _, "X" -> playScore[losingResults[a]] + resultScore["L"]
-         | _, "Z" -> playScore[winningResults[a]] + resultScore["W"]
+         match playerOne, outcome with
+         | _, "Win" -> playScore[winningResults[playerOne]] 
+         | _, "Draw" -> playScore[playerOne] 
+         | _, "Lose" -> playScore[losingResults[playerOne]]
       result     
    
    let chooseMoves rows =
@@ -79,8 +86,14 @@ module Days =
          else
             let row = List.head rows
             let plays = row.Split " " |> Array.toList |> List.map (fun i -> i.Trim())
-            let roundScore = getMove plays[0] plays[1]      
-            inner (List.tail rows) (score + roundScore)
+            printfn $"{plays[0]}"
+            printfn $"{plays[1]}"
+            let playerOne = playConversions[plays[0]]
+            printfn $"{playerOne}"
+
+            let outcome = outcomeConversions[plays[1]]
+            let roundScore = getMove playerOne outcome          
+            inner (List.tail rows) (score + roundScore + resultScore[outcome])
       
       inner rows 0
    
@@ -160,16 +173,14 @@ module Days =
       let filePath = "elf.txt"
       let rows = File.ReadLines filePath |> Seq.toList
       let finalRows = rows |> splitByBlankLine |> List.rev
-      for row in finalRows do
-         printfn $"{row}"
       let answer = findElf finalRows
       printfn $"{answer}"
    
    let day2 v =
       let filePath = "RPS.txt"
       let rows = File.ReadLines filePath |> Seq.toList
-      //let answer = calcScore rows
-      let answer = chooseMoves rows 
+      let answer = calcScore rows
+      //let answer = chooseMoves rows 
       printfn $"{answer}"
       
    let day3 v =
